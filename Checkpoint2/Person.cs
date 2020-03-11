@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace Checkpoint2
 {
@@ -16,8 +18,6 @@ namespace Checkpoint2
         }
 
         public abstract override String ToString();
-
-        public abstract List<object[]> GetEventsFromDB();
         
         public List<Event> DisplayEvents(string startDate, string endDate)
         {
@@ -36,7 +36,8 @@ namespace Checkpoint2
         }
         public void FillEventList()
         {
-            List<object[]> list = GetEventsFromDB();
+            string procedure = "sp_eventsPerson";
+            List<object[]> list = Database.GetEntriesFromDB(Name, procedure);
             foreach (object[] item in list)
             {
                 Event evento = new Event();

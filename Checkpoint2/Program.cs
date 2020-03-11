@@ -12,9 +12,6 @@ namespace Checkpoint2
             [Option('n', "name", Required = true, HelpText = "Person's name")]
             public String Name { get; set; }
 
-            [Option('p', "prof", Required = false, HelpText = "Is the person professor?")]
-            public bool IsProf { get; set; }
-
             [Option('b', "begin", Required = true, HelpText = "Start date")]
             public String StartDate { get; set; }
 
@@ -48,19 +45,9 @@ namespace Checkpoint2
 
         static void RunEventOptions(EventOptions opts)
         {
-            if (opts.IsProf)
-            {
-                Person prof = new Prof(opts.Name);
-                prof.FillEventList();
-                prof.DisplayEvents(opts.StartDate, opts.EndDate);
-            }
-            else
-            {
-                Person stud = new Student(opts.Name);
-                stud.FillEventList();
-                stud.DisplayEvents(opts.StartDate, opts.EndDate);
-            }
-
+            Person pers = PersonFactory.Create(opts.Name);
+            pers.FillEventList();
+            pers.DisplayEvents(opts.StartDate, opts.EndDate);
         }
     }
 }

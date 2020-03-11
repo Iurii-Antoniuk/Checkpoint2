@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Data;
 
 namespace Checkpoint2
 {
@@ -27,6 +28,27 @@ namespace Checkpoint2
             return connectionString;
         }
 
-        
+        public static List<object[]> GetEntriesFromDB(string name, string procedureName)
+        {
+            SqlConnection connection = Instance;
+            connection.Open();
+
+            SqlCommand command = new SqlCommand(procedureName, connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@personName", SqlDbType.VarChar)).Value = name;
+
+            SqlDataReader dataread = command.ExecuteReader();
+            List<object[]> data = new List<object[]>();
+
+            while (dataread.Read())
+            {
+                object[] output = new object[dataread.FieldCount];
+                dataread.GetValues(output);
+                data.Add(output);
+            }
+            dataread.Close();
+            connection.Close();
+            return data;
+        }
     }
 }

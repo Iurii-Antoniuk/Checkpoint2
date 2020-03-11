@@ -11,25 +11,19 @@ CREATE TABLE [Event](event_id INT PRIMARY KEY IDENTITY(1,1),
                     event_date DATE NOT NULL,
 					event_description VARCHAR(max))
 
-CREATE TABLE Prof(prof_id INT PRIMARY KEY IDENTITY(1,1),
-					[name] VARCHAR(60),
-					superiour_id INT NOT NULL FOREIGN KEY REFERENCES Prof(prof_id))
-
-
 CREATE TABLE Cursus(cursus_id INT PRIMARY KEY IDENTITY(1,1),
-                    [name] VARCHAR(60),
+					[name] VARCHAR(60),
 					startDate DATE NOT NULL,
 					endDate DATE NOT NULL)
 
-CREATE TABLE Student(student_id INT PRIMARY KEY IDENTITY(1,1),
-                      [name] VARCHAR(60),
-					  FK_prof_id INT NOT NULL FOREIGN KEY REFERENCES Prof(prof_id),
-					  FK_cursus_id INT NOT NULL FOREIGN KEY REFERENCES Cursus(cursus_id)
-					  )
+CREATE TABLE Person(person_id INT PRIMARY KEY IDENTITY(1,1),
+					[name] VARCHAR(60),
+					superiour_id INT NOT NULL FOREIGN KEY REFERENCES Person(person_id),
+					FK_cursus_id INT FOREIGN KEY REFERENCES Cursus(cursus_id))
+
 
 CREATE TABLE Agenda(agenda_id INT PRIMARY KEY IDENTITY(1,1),
-                    FK_prof_id INT FOREIGN KEY REFERENCES Prof(prof_id),
-					FK_student_id INT FOREIGN KEY REFERENCES Student(student_id),
+                    FK_person_id INT FOREIGN KEY REFERENCES Person(person_id),
 					FK_event_id INT NOT NULL FOREIGN KEY REFERENCES [Event](event_id)
 					)
 GO
@@ -40,7 +34,7 @@ INSERT INTO [Event](event_name, event_date, event_description) VALUES ('Startup 
 												   ('Annual carnival', '2019-10-15', 'Get drunk, get laid, just fucking relax pal')
 GO
 
-INSERT INTO Prof([name], superiour_id) VALUES ('Mestre Bimba', 1), ('Joshua', 1), ('Michael', 1), ('John', 1),
+INSERT INTO Person([name], superiour_id) VALUES ('Mestre Bimba', 1), ('Joshua', 1), ('Michael', 1), ('John', 1),
 											   ('Huba', 1), ('Buba', 2), ('Sucka', 1), ('Fucka', 1), ('Licka', 2)
 GO
 
@@ -49,61 +43,69 @@ INSERT INTO Cursus([name], startDate, endDate) VALUES ('Computer Science', '2019
 GO
 
 
---Fill the Student table
+--Fill the Person table with Students
 Declare @number_student INT = 0
 Declare @name_suffix INT = 1
 
 WHILE(@number_student <= 150)
 BEGIN
    Declare @name VARCHAR(20) = 'Student ' + CONVERT(VARCHAR, @name_suffix)
-   INSERT INTO Student([name], FK_prof_id, FK_cursus_id) VALUES (@name, FLOOR(RAND()*(9-1+1))+1, FLOOR(RAND()*(4-1+1))+1)
+   INSERT INTO Person([name], superiour_id, FK_cursus_id) VALUES (@name, FLOOR(RAND()*(9-1+1))+1, FLOOR(RAND()*(4-1+1))+1)
    SET @name_suffix = @name_suffix + 1
-   SELECT @number_student = (SELECT COUNT(student_id) FROM Student)             
+   SET @number_student = @number_student + 1               
 END
 GO
 
 --Fill the Agenda table
 Declare @counter INT = 0
 
-WHILE(@counter <= 300)
+WHILE(@counter <= 600)
 BEGIN
-   IF @counter % 5 = 0
-   BEGIN
-	   INSERT INTO Agenda(FK_prof_id, FK_event_id) VALUES (FLOOR(RAND()*(9-1+1))+1, FLOOR(RAND()*(9-1+1))+1)
+	   INSERT INTO Agenda(FK_person_id, FK_event_id) VALUES (FLOOR(RAND()*(160-1+1))+1, FLOOR(RAND()*(9-1+1))+1)
 	   SELECT @counter = (SELECT COUNT(agenda_id) FROM Agenda)
-   END
-   ELSE
-   BEGIN
-	   INSERT INTO Agenda(FK_student_id, FK_event_id) VALUES (FLOOR(RAND()*(151-1+1))+1, FLOOR(RAND()*(9-1+1))+1)
-	   SELECT @counter = (SELECT COUNT(agenda_id) FROM Agenda)
-   END
 END
 GO
 
---Procedures événements auxquels une personne assiste sur une période donnée
-DROP PROCEDURE IF EXISTS sp_eventsStudent
+--Procedure qui retourne tous les événements auxquels une personne assiste
+DROP PROCEDURE IF EXISTS sp_eventsPerson
 GO
-CREATE PROCEDURE sp_eventsStudent
-	@studentName VARCHAR(50)
+CREATE PROCEDURE sp_eventsPerson
+	@personName VARCHAR(50)
 	AS
 	BEGIN
 		SELECT event_name, event_date, event_description FROM [Event]
 		INNER JOIN Agenda ON Agenda.FK_event_id = [Event].event_id
-		INNER JOIN Student ON Student.student_id = Agenda.FK_student_id
-		WHERE Student.[name] = @studentName
+		INNER JOIN Person ON Person.person_id = Agenda.FK_person_id
+		WHERE Person.[name] = @personName
 	END
 GO
---EXECUTE sp_eventsStudent 'Student 20'
-DROP PROCEDURE IF EXISTS sp_eventsProf
+--EXECUTE sp_eventsPerson 'Mestre Bimba'
+
+
+--Procedure getting the number of subordinates of a Person by Name
+DROP PROCEDURE IF EXISTS sp_getNumberSubordinates
 GO
-CREATE PROCEDURE sp_eventsProf
-	@profName VARCHAR(50)
+CREATE PROCEDURE sp_getNumberSubordinates
+	@personName VARCHAR(50)
 	AS
 	BEGIN
-		SELECT event_name, event_date, event_description FROM [Event]
-		INNER JOIN Agenda ON Agenda.FK_event_id = [Event].event_id
-		INNER JOIN Prof ON Prof.prof_id = Agenda.FK_prof_id
-		WHERE Prof.[name] = @profName
+		SELECT sp.[name], COUNT(sub.person_id) AS Number_subordinates FROM Person AS sp
+		INNER JOIN Person AS sub ON sub.superiour_id = sp.person_id
+		WHERE sp.[name] = @personName
+		GROUP BY sp.[name]
 	END
 GO
---EXECUTE sp_eventsProf 'Mestre Bimba'
+--EXECUTE sp_getNumberSubordinates 'Licka'
+
+--The list of subordinates of a Person by Name
+DROP PROCEDURE IF EXISTS sp_getSubordinatesByName
+GO
+CREATE PROCEDURE sp_getSubordinatesByName
+	@personName VARCHAR(50)
+	AS
+	BEGIN
+		SELECT sp.[name] AS Chief, sub.[name] AS Subordinate_name FROM Person AS sp
+		INNER JOIN Person AS sub ON sub.superiour_id = sp.person_id
+		WHERE sp.[name] = @personName
+	END
+GO
