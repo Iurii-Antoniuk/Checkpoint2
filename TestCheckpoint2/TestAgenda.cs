@@ -44,7 +44,7 @@ namespace TestCheckpoint2
 		[Test]
 		public void TestAgendaForAPeriod()
 		{
-			List<Event> returnedEvents = _prof.DisplayEvents("2018-01-01", "2021-10-15");
+			List<Event> returnedEvents = _prof.GetEventsByDate(new DateTime(2017, 2, 2), new DateTime(2023, 2, 2));
 			List<Event> expectedEvents = new List<Event>() { event2, event3 };
 			Assert.That(returnedEvents, Is.EquivalentTo(expectedEvents));
 		}

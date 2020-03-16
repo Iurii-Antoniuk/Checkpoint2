@@ -26,14 +26,6 @@ namespace Checkpoint2
             EndTime = EndTime + timeDelta;
         }
 
-        public static DateTime ParseDate(string eventDate)
-        {
-            
-            DateTime dateValue = DateTime.ParseExact(eventDate,
-                                        "yyyy-MM-dd",
-                                        CultureInfo.InvariantCulture,
-                                        DateTimeStyles.None); ;
-            return dateValue;
-        }
+        
     }
 }

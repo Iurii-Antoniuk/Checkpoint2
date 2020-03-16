@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using CommandLine;
+using System.Globalization;
+using System.Configuration;
+using System.Data.SqlClient;
+using System.Collections.Concurrent;
 
 namespace Checkpoint2
 {
@@ -47,7 +51,24 @@ namespace Checkpoint2
         {
             Person pers = PersonFactory.Create(opts.Name);
             pers.FillEventList();
-            pers.DisplayEvents(opts.StartDate, opts.EndDate);
+            DateTime start = ParseDate(opts.StartDate);
+            DateTime finish = ParseDate(opts.EndDate);
+            List<Event> eventToDisplay = pers.GetEventsByDate(start, finish);
+            foreach (Event evento in eventToDisplay)
+            {
+                Console.WriteLine("{0} - {1}. *Held on {2} - {3}", evento.Name, evento.Description, evento.StartTime, evento.EndTime);
+            }
+            
+        }
+
+        private static DateTime ParseDate(string eventDate)
+        {
+
+            DateTime dateValue = DateTime.ParseExact(eventDate,
+                                        "yyyy-MM-dd",
+                                        CultureInfo.InvariantCulture,
+                                        DateTimeStyles.None); ;
+            return dateValue;
         }
     }
 }

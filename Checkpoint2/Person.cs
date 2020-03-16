@@ -18,17 +18,17 @@ namespace Checkpoint2
         }
 
         public abstract override String ToString();
+
         
-        public List<Event> DisplayEvents(string startDate, string endDate)
+        public List<Event> GetEventsByDate(DateTime startDate, DateTime endDate)
         {
-            DateTime start = Event.ParseDate(startDate);
-            DateTime finish = Event.ParseDate(endDate);
+            
             List<Event> eventsToDisplay = new List<Event>();
             foreach (Event evento in Events)
             {
-                if ((evento.StartTime > start) && (evento.EndTime < finish))
+                if ((evento.StartTime > startDate) && (evento.EndTime < endDate))
                 {
-                    Console.WriteLine("{0} - {1}. *Held on {2} - {3}", evento.Name, evento.Description, evento.StartTime, evento.EndTime);
+                    
                     eventsToDisplay.Add(evento);
                 }
             }
